@@ -1,12 +1,12 @@
-import React, { Suspense, lazy } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Navbar from "./Navbar";
-import { ToastProvider } from "./ToastContext";
-import { AnimatePresence, motion } from "framer-motion";
-import InstallPrompt from "./components/InstallPrompt";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-// Lazy-loaded pages
+// Lazy-loaded routes
 const LandingPage = lazy(() => import("./LandingPage"));
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
@@ -19,88 +19,39 @@ const AnimatedRoutes = () => {
   const token = localStorage.getItem("token");
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route
-          path="/"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              <LandingPage />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Login />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Register />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            token ? (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Dashboard />
-              </motion.div>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/players"
-          element={
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <PlayersList />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/players/:id"
-          element={
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <PlayerProfile />
-            </motion.div>
-          }
-        />
-        <Route path="*" element={<div className="p-8">404 - Not Found</div>} />
-      </Routes>
-    </AnimatePresence>
+    <TransitionGroup>
+      <CSSTransition key={location.key} classNames="fade" timeout={300}>
+        <Routes location={location}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/players" element={<PlayersList />} />
+          <Route path="/players/:id" element={<PlayerProfile />} />
+          <Route path="*" element={<div className="p-8">404 - Not Found</div>} />
+        </Routes>
+      </CSSTransition>
+    </TransitionGroup>
   );
 };
 
 const App = () => {
+  useEffect(() => {
+    toast.success(`🎉 TennisConnect v${__APP_VERSION__} loaded`, { autoClose: 3000 });
+  }, []);
+
   return (
     <Router>
-      <ToastProvider>
-        <div className="min-h-screen bg-gray-50 text-gray-900">
-          <Navbar />
-          <Suspense fallback={<div className="p-8">Loading...</div>}>
-            <AnimatedRoutes />
-          </Suspense>
-          <InstallPrompt />
-        </div>
-      </ToastProvider>
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <Navbar />
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
+          <AnimatedRoutes />
+        </Suspense>
+        <ToastContainer />
+        <footer className="text-center text-xs text-gray-400 mt-8 mb-4">
+          v{__APP_VERSION__}
+        </footer>
+      </div>
     </Router>
   );
 };

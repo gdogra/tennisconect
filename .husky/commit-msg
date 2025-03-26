@@ -1,6 +1,0 @@
-#!/bin/sh
-. "$(dirname "$0")/../.husky/_/husky.sh"
-
-echo "✅ Running commitlint on: $1"
-npx commitlint --edit "$1"
-
