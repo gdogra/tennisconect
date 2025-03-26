@@ -1,34 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function ChallengeForm() {
-  const [players, setPlayers] = useState([]);
   const [opponentId, setOpponentId] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
-
-  useEffect(() => {
-    const fetchPlayers = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const res = await fetch("http://localhost:5001/players", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setPlayers(data);
-      } catch (err) {
-        console.error("❌ Error fetching players", err);
-        toast.error("Failed to load players list.");
-      }
-    };
-    fetchPlayers();
-  }, []);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !token) return;
+    setSuccess(false);
+    setError("");
 
     try {
       const res = await fetch("http://localhost:5001/challenges", {
@@ -47,73 +32,77 @@ export default function ChallengeForm() {
 
       const data = await res.json();
       if (res.ok) {
-        toast.success("🎯 Challenge sent!");
+        setSuccess(true);
         setOpponentId("");
         setDate("");
         setLocation("");
       } else {
-        toast.error(`❌ ${data.error || "Failed to send challenge"}`);
+        setError(data.error || "Failed to send challenge.");
       }
     } catch (err) {
-      console.error("❌ Error:", err);
-      toast.error("❌ Network error");
+      setError("❌ Network error");
     }
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white shadow rounded">
-      <h2 className="text-xl font-bold mb-4 text-center">🎯 Issue a Challenge</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25 }}
+      className="border p-4 rounded shadow bg-white dark:bg-gray-800 mt-4"
+    >
+      <h2 className="text-xl font-semibold mb-2">🎯 Issue a Challenge</h2>
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium">Opponent</label>
+          <label className="block text-sm">Opponent</label>
           <select
             value={opponentId}
             onChange={(e) => setOpponentId(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+            className="border px-2 py-1 rounded w-full"
             required
           >
             <option value="">Select an opponent</option>
-            {players.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.first_name} {p.last_name} – {p.city}
-              </option>
-            ))}
+            {/* Ideally populate this from state */}
+            {user && user.id && (
+              <option value="2">Opponent #2</option> // Replace with real list
+            )}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Date</label>
+          <label className="block text-sm">Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+            className="border px-2 py-1 rounded w-full"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Location</label>
+          <label className="block text-sm">Location</label>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-            placeholder="Court name or address"
+            className="border px-2 py-1 rounded w-full"
             required
           />
         </div>
 
-        <div className="text-center">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Send Challenge
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Send Challenge
+        </button>
+
+        {success && <p className="text-green-600">✅ Challenge sent!</p>}
+        {error && <p className="text-red-500">{error}</p>}
       </form>
-    </div>
+    </motion.div>
   );
 }
 

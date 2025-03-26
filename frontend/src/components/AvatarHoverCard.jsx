@@ -4,8 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function AvatarHoverCard({ player, size = 32 }) {
   const [hovered, setHovered] = useState(false);
-  const initials = `${player.first_name[0]}${player.last_name[0]}`;
   const navigate = useNavigate();
+
+  if (!player) return null;
+
+  const initials = `${player.first_name?.[0] ?? "?"}${player.last_name?.[0] ?? ""}`;
 
   return (
     <div
@@ -41,8 +44,8 @@ export default function AvatarHoverCard({ player, size = 32 }) {
             transition={{ duration: 0.2 }}
           >
             <div className="font-semibold">{player.first_name} {player.last_name}</div>
-            <div>🎾 Skill: {player.skill_level}</div>
-            <div>📍 {player.city}</div>
+            <div>🎾 Skill: {player.skill_level ?? "N/A"}</div>
+            <div>📍 {player.city ?? "Unknown"}</div>
             <button
               onClick={() => navigate(`/players/${player.id}`)}
               className="text-blue-500 underline text-xs mt-1"

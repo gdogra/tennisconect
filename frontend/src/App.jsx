@@ -1,12 +1,12 @@
-// src/App.jsx
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { ToastProvider } from "./ToastContext";
 import Navbar from "./Navbar";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { ToastProvider } from "./ToastContext";
+import { AnimatePresence, motion } from "framer-motion";
+import InstallPrompt from "./components/InstallPrompt";
 import "./App.css";
 
-// Lazy-load pages
+// Lazy-loaded pages
 const LandingPage = lazy(() => import("./LandingPage"));
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
@@ -14,61 +14,91 @@ const Dashboard = lazy(() => import("./Dashboard"));
 const PlayersList = lazy(() => import("./components/PlayersList"));
 const PlayerProfile = lazy(() => import("./components/PlayerProfile"));
 
-const AnimatedRoutes = ({ user, token }) => {
+const AnimatedRoutes = () => {
   const location = useLocation();
+  const token = localStorage.getItem("token");
 
   return (
-    <TransitionGroup>
-      <CSSTransition key={location.key} classNames="fade" timeout={300}>
-        <Routes location={location}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/dashboard"
-            element={user && token ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route path="/players" element={<PlayersList />} />
-          <Route path="/players/:id" element={<PlayerProfile />} />
-          <Route path="*" element={<div className="p-8">404 - Not Found</div>} />
-        </Routes>
-      </CSSTransition>
-    </TransitionGroup>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/"
+          element={
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <LandingPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Login />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Register />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            token ? (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Dashboard />
+              </motion.div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/players"
+          element={
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PlayersList />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/players/:id"
+          element={
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PlayerProfile />
+            </motion.div>
+          }
+        />
+        <Route path="*" element={<div className="p-8">404 - Not Found</div>} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Load user/token once at startup
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading TennisConnect...
-      </div>
-    );
-  }
-
   return (
     <Router>
       <ToastProvider>
         <div className="min-h-screen bg-gray-50 text-gray-900">
           <Navbar />
           <Suspense fallback={<div className="p-8">Loading...</div>}>
-            <AnimatedRoutes user={user} token={token} />
+            <AnimatedRoutes />
           </Suspense>
+          <InstallPrompt />
         </div>
       </ToastProvider>
     </Router>
