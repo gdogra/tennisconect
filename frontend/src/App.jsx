@@ -1,12 +1,12 @@
-// src/App.jsx
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { ToastProvider } from "./ToastContext";
-import Navbar from "./Navbar";
+import { ToastContainer, toast } from "react-toastify";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
+import Navbar from "./Navbar";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-// Lazy-load pages
+// Lazy-loaded routes
 const LandingPage = lazy(() => import("./LandingPage"));
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
@@ -14,8 +14,9 @@ const Dashboard = lazy(() => import("./Dashboard"));
 const PlayersList = lazy(() => import("./components/PlayersList"));
 const PlayerProfile = lazy(() => import("./components/PlayerProfile"));
 
-const AnimatedRoutes = ({ user, token }) => {
+const AnimatedRoutes = () => {
   const location = useLocation();
+  const token = localStorage.getItem("token");
 
   return (
     <TransitionGroup>
@@ -24,10 +25,7 @@ const AnimatedRoutes = ({ user, token }) => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route
-            path="/dashboard"
-            element={user && token ? <Dashboard /> : <Navigate to="/login" />}
-          />
+          <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/players" element={<PlayersList />} />
           <Route path="/players/:id" element={<PlayerProfile />} />
           <Route path="*" element={<div className="p-8">404 - Not Found</div>} />
@@ -38,39 +36,22 @@ const AnimatedRoutes = ({ user, token }) => {
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Load user/token once at startup
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
-    setLoading(false);
+    toast.success(`🎉 TennisConnect v${__APP_VERSION__} loaded`, { autoClose: 3000 });
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading TennisConnect...
-      </div>
-    );
-  }
 
   return (
     <Router>
-      <ToastProvider>
-        <div className="min-h-screen bg-gray-50 text-gray-900">
-          <Navbar />
-          <Suspense fallback={<div className="p-8">Loading...</div>}>
-            <AnimatedRoutes user={user} token={token} />
-          </Suspense>
-        </div>
-      </ToastProvider>
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <Navbar />
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
+          <AnimatedRoutes />
+        </Suspense>
+        <ToastContainer />
+        <footer className="text-center text-xs text-gray-400 mt-8 mb-4">
+          v{__APP_VERSION__}
+        </footer>
+      </div>
     </Router>
   );
 };

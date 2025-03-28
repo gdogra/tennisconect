@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "👉 Running commit-msg hook"
+echo "👉 Commit file: $1"
+
+. "$(dirname "$0")/../.husky/_/husky.sh"
+
+npx commitlint --edit "$1"
+

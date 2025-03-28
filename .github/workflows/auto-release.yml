@@ -1,0 +1,36 @@
+name: Auto Release on Merge to Main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📥 Install Dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: 🧪 Run Standard Release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm run release
+        working-directory: ./frontend
+
+      - name: ✅ Push Tag + Changelog
+        run: |
+          git push --follow-tags origin main
+        working-directory: ./frontend
+
